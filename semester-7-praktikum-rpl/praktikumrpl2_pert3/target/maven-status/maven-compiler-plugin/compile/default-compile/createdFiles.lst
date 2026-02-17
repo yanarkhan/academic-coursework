@@ -1,0 +1,4 @@
+com\mycompany\praktikumrpl2_pert3\model\ModelMahasiswa.class
+com\mycompany\praktikumrpl2_pert3\controller\MahasiswaController.class
+com\mycompany\praktikumrpl2_pert3\view\MahasiswaView.class
+com\mycompany\praktikumrpl2_pert3\model\MahasiswaDAO.class

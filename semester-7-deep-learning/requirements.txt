@@ -1,0 +1,12 @@
+streamlit
+pandas
+numpy
+matplotlib
+scikit-learn
+tensorflow
+plotly
+openpyxl
+pillow
+opencv-python
+streamlit-drawable-canvas
+ultralytics
