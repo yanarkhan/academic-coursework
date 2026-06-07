@@ -1,0 +1,107 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================================
+// ENUM DEFINITIONS
+// ============================================================
+
+enum Role {
+  ADMIN
+  GURU
+  SISWA
+}
+
+enum StatusKelulusan {
+  LULUS
+  TIDAK_LULUS
+}
+
+// ============================================================
+// MODEL DEFINITIONS
+// ============================================================
+
+/// Tabel utama untuk autentikasi semua pengguna sistem
+model User {
+  id        String   @id @default(cuid())
+  username  String   @unique
+  password  String   // Disimpan sebagai bcrypt hash, BUKAN plaintext
+  role      Role
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relasi one-to-one: satu User bisa jadi Siswa ATAU Guru, tidak keduanya
+  siswa Siswa?
+  guru  Guru?
+
+  @@map("users")
+}
+
+/// Data detail siswa, berelasi one-to-one dengan User
+model Siswa {
+  id    String @id @default(cuid())
+  nis   String @unique // NIS wajib unik di seluruh sistem
+  nama  String
+  kelas String
+
+  // Relasi ke User (hapus User akan hapus Siswa — Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relasi one-to-many: satu Siswa bisa punya banyak Nilai
+  nilai Nilai[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("siswa")
+}
+
+/// Data detail guru, berelasi one-to-one dengan User
+model Guru {
+  id            String @id @default(cuid())
+  idGuru        String @unique // ID Guru wajib unik
+  namaGuru      String
+  mataPelajaran String // Satu guru hanya satu mata pelajaran
+
+  // Relasi ke User (hapus User akan hapus Guru — Cascade)
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Relasi one-to-many: satu Guru bisa punya banyak entri Nilai
+  nilai Nilai[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("guru")
+}
+
+/// Tabel nilai — menghubungkan Siswa dan Guru, menyimpan semua data nilai
+model Nilai {
+  id              String          @id @default(cuid())
+  nilaiTugas      Float           // Range: 0-100
+  nilaiUTS        Float           // Range: 0-100
+  nilaiUAS        Float           // Range: 0-100
+  nilaiAkhir      Float           // Dihitung otomatis oleh NilaiService
+  statusKelulusan StatusKelulusan // Ditentukan otomatis oleh NilaiService
+
+  // Relasi ke Siswa
+  siswaId String
+  siswa   Siswa  @relation(fields: [siswaId], references: [id], onDelete: Cascade)
+
+  // Relasi ke Guru
+  guruId String
+  guru   Guru   @relation(fields: [guruId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Constraint: satu siswa hanya boleh punya satu nilai per guru (per mata pelajaran)
+  @@unique([siswaId, guruId])
+  @@map("nilai")
+}
