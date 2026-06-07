@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# EduGrade - Sistem Pengolahan Nilai Akademik
+
+EduGrade adalah sistem informasi akademik berbasis Role-Based Access Control (RBAC) yang dikembangkan untuk kebutuhan Uji Kompetensi Keahlian (UJIKOM) LSP Programmer. Aplikasi ini membantu pengelolaan data siswa, guru, nilai, dan laporan akademik melalui antarmuka modern yang terstruktur, aman, dan mudah digunakan.
+
+## Features
+
+- Multi-role access untuk Admin, Guru, dan Siswa.
+- Manajemen data terpusat untuk siswa, guru, mata pelajaran, dan nilai akademik.
+- Kalkulasi nilai otomatis berdasarkan komponen Tugas, UTS, dan UAS.
+- Penentuan status kelulusan secara otomatis berdasarkan nilai akhir.
+- Cetak laporan PDF untuk kebutuhan rekap dan dokumentasi akademik.
+- Autentikasi berbasis kredensial dengan kontrol akses sesuai peran pengguna.
+
+## Persyaratan Sistem
+
+Pastikan lingkungan lokal memenuhi kebutuhan minimum berikut sebelum menjalankan aplikasi.
+
+- Node.js v18 atau lebih baru.
+- PostgreSQL aktif dan dapat diakses dari mesin lokal.
+- NPM atau Yarn sebagai package manager.
+- Git untuk mengambil source code dari repositori.
+
+## Tech Stack
+
+| Area        | Teknologi             |
+| ----------- | --------------------- |
+| Framework   | Next.js App Router    |
+| UI Runtime  | React                 |
+| Bahasa      | TypeScript            |
+| ORM         | Prisma ORM            |
+| Database    | PostgreSQL            |
+| Autentikasi | NextAuth.js / Auth.js |
+| Styling     | Tailwind CSS          |
+| Komponen UI | Shadcn UI             |
+
+## Struktur Arsitektur
+
+EduGrade menggunakan arsitektur Next.js App Router dengan pemisahan tanggung jawab yang jelas antara UI, server action, service layer, dan database.
+
+Logika bisnis utama ditempatkan pada Service Layer berbasis Pemrograman Berorientasi Objek (OOP), seperti `SiswaService`, `GuruService`, dan `NilaiService`. Pendekatan ini menjaga kode tetap modular, mudah diuji, dan sesuai dengan standar kompetensi LSP.
+
+Untuk mutasi data, aplikasi menggunakan Server Actions sehingga proses validasi, otorisasi, dan akses database tetap berjalan di sisi server. Prisma ORM digunakan sebagai satu-satunya jalur akses ke PostgreSQL melalui singleton Prisma Client.
 
 ## Getting Started
 
-First, run the development server:
+Ikuti langkah berikut untuk menjalankan proyek secara lokal.
+
+```bash
+git clone https://github.com/yanarkhan/academic-coursework.git
+cd academic-coursework/semester-8-lsp-preparation/aplikasi-nilai
+```
+
+```bash
+npm install
+```
+
+Salin file contoh environment menjadi `.env`.
+
+```bash
+cp .env.example .env
+```
+
+Sesuaikan nilai `DATABASE_URL`, `AUTH_SECRET`, dan konfigurasi lain di dalam `.env`.
+
+Jalankan migrasi database dan seed data awal.
+
+```bash
+npx prisma migrate dev
+npx prisma db seed
+```
+
+Jalankan server development.
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Aplikasi dapat dibuka melalui:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```text
+http://localhost:3000
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Kredensial Demo
 
-## Learn More
+Gunakan akun berikut untuk mencoba aplikasi setelah proses seeding database selesai.
 
-To learn more about Next.js, take a look at the following resources:
+| Role  | Username / NIS / NIP | Password   | Akses                                    |
+| ----- | -------------------- | ---------- | ---------------------------------------- |
+| Admin | `admin`              | `admin123` | Dashboard admin, manajemen data, laporan |
+| Guru  | `1987654321`         | `guru123`  | Input nilai dan rekap nilai siswa        |
+| Siswa | `1234567890`         | `siswa123` | Melihat nilai dan status kelulusan       |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+> Jika data seed diubah, sesuaikan kembali kredensial demo pada tabel ini.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Lisensi
 
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Proyek ini dikembangkan sebagai bagian dari persiapan dan pelaksanaan UJIKOM LSP Programmer.
