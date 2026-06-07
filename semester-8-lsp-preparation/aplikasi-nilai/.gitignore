@@ -47,3 +47,4 @@ next-env.d.ts
 /.codex/
 /app/generated/prisma
 prd.md
+docs/
