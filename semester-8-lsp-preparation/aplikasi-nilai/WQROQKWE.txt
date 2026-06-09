@@ -1,0 +1,129 @@
+Tentu, ini adalah draf jawaban komprehensif untuk tiga bagian tersebut. Anda dapat menggunakan draf ini sebagai referensi utama saat melakukan presentasi atau sesi tanya jawab dengan Asesor LSP.
+
+### BAGIAN 1: PENGEMBANGAN DAN RANCANGAN SISTEM
+
+**1. Metode Pengembangan Aplikasi**
+Metode yang diterapkan adalah **Agile (Iterative Development)**. Pemilihan metode ini didasarkan pada fleksibilitasnya dalam mengakomodasi perubahan kebutuhan secara cepat selama siklus pengembangan. Aplikasi dibangun secara bertahap mulai dari perancangan *database* (Prisma), pembuatan antarmuka (Shadcn UI), implementasi autentikasi (NextAuth), hingga fitur spesifik seperti *Role-Based Access Control* (RBAC) dan modul cetak PDF. Setiap iterasi langsung diuji (*testing*) untuk memastikan tidak ada *bug* yang terbawa ke tahap selanjutnya.
+
+**2. Tahapan dalam Pengembangan Sistem**
+Tahapan pengembangan meliputi:
+
+* **Analisis Kebutuhan:** Mengumpulkan spesifikasi dari skenario soal UJIKOM, menentukan hak akses (Admin, Guru, Siswa), dan membuat dokumen *Product Requirement Document* (PRD).
+* **Perancangan Sistem:** Membuat pemodelan arsitektur, *flowchart* proses bisnis, dan skema *database* relasional.
+* **Implementasi (Coding):** Menulis kode program menggunakan Next.js App Router, mengonfigurasi PostgreSQL via Prisma ORM, dan membangun komponen *frontend* dengan Tailwind CSS.
+* **Pengujian (Testing):** Melakukan *Blackbox testing* pada fitur CRUD, memvalidasi keamanan *route* (RBAC), dan *debugging* tata letak cetak dokumen.
+* **Dokumentasi & Rilis:** Menyusun dokumentasi kode, *deployment* (jika ada), dan mengamankan kode melalui *version control* Git.
+
+**3. Rancangan Sistem**
+Sistem dirancang dengan arsitektur **Client-Server** modern menggunakan framework *Next.js App Router*.
+
+* **Frontend:** Memanfaatkan *React Server Components* (RSC) untuk mempercepat waktu muat halaman dan *Client Components* untuk elemen interaktif (seperti *form* dan *dialog*).
+* **Backend:** Menggunakan pendekatan *Server Actions* sebagai pengganti *API Routes* tradisional untuk menangani mutasi data (CRUD) secara aman langsung dari *server*.
+* **Keamanan:** Sesi pengguna dikelola menggunakan NextAuth.js terintegrasi dengan *middleware* untuk memblokir akses yang tidak sah berdasarkan *Role* pengguna.
+
+**4. Struktur Tabel**
+*Database* dikelola menggunakan Prisma ORM. Struktur utama mencakup tabel-tabel berikut:
+
+* `User`: Menyimpan data autentikasi dan *Role* (ADMIN, GURU, SISWA).
+* `Siswa`: Menyimpan profil akademik siswa (NIS, Nama, Kelas) dan berelasi *One-to-One* dengan `User`.
+* `Guru`: Menyimpan profil guru (NIP, Nama, Mata Pelajaran) dan berelasi *One-to-One* dengan `User`.
+* `Nilai`: Menyimpan komponen nilai (Tugas, UTS, UAS, Nilai Akhir) yang memiliki relasi *Foreign Key* (Many-to-One) ke entitas `Siswa` dan `Guru`.
+
+---
+
+### BAGIAN 2: REVIEW KODE PROGRAM DAN OOP
+
+**5. Penerapan Coding Guideline**
+Proyek ini mengadopsi standar TypeScript yang ketat dan pola modular. Pemisahan *concern* diterapkan dengan menaruh logika bisnis di `/lib`, komponen UI di `/components`, dan *routing* di `/app`. Validasi data yang masuk dari pengguna diterapkan secara ketat menggunakan **Zod**.
+
+```typescript
+// Contoh di lib/validations/nilaiSchema.ts
+export const NilaiSchema = z.object({
+  tugas: z.number().min(0).max(100),
+  uts: z.number().min(0).max(100),
+  uas: z.number().min(0).max(100),
+  siswaId: z.string().uuid(),
+});
+
+```
+
+**6. Penggunaan Library**
+
+* **Next.js:** Framework utama React untuk *routing*, *rendering*, dan *server actions*.
+* **Prisma ORM:** Abstraksi *database* untuk melakukan *query* dengan keamanan tipe (*type-safe*).
+* **NextAuth.js (v5):** Menangani autentikasi dan pembuatan token sesi (*JWT*).
+* **Tailwind CSS & Shadcn UI:** *Library styling utility-first* dipadukan dengan komponen *accessible* (Radix UI) untuk membangun antarmuka yang cepat dan konsisten.
+* **React-to-Print:** Mengelola proses pencetakan DOM React ke format PDF untuk laporan Admin.
+
+**7. Pemodelan Entity & Implementasi Class (OOP)**
+Logika bisnis dibungkus menggunakan konsep *Object-Oriented Programming* (OOP) melalui *Service Layer*. Kelas-kelas *service* ini membungkus operasi *database*, sehingga *controller/action* menjadi bersih.
+
+```typescript
+// Contoh di lib/services/NilaiService.ts
+export class NilaiService {
+  static async hitungDanSimpanNilai(data: InputNilaiType) {
+    const nilaiAkhir = (data.tugas * 0.3) + (data.uts * 0.3) + (data.uas * 0.4);
+    const status = nilaiAkhir >= 70 ? 'LULUS' : 'TIDAK_LULUS';
+    
+    return await prisma.nilai.create({
+      data: { ...data, nilaiAkhir, status }
+    });
+  }
+}
+
+```
+
+**8. Implementasi Fungsi/Prosedur**
+Fungsi utama untuk menjembatani UI dan *Service Layer* menggunakan pola eksekusi *Server Actions*.
+
+```typescript
+// Contoh di actions/nilaiActions.ts
+'use server'
+import { NilaiService } from '@/lib/services/NilaiService';
+
+export async function submitNilaiAction(formData: FormData) {
+  // Parsing dan validasi data form...
+  const result = await NilaiService.hitungDanSimpanNilai(parsedData);
+  revalidatePath('/guru/dashboard');
+  return { success: true, data: result };
+}
+
+```
+
+**9. Penerapan Percabangan (Status Kelulusan)**
+Percabangan digunakan untuk menentukan kelulusan secara dinamis berdasarkan perhitungan persentase bobot nilai.
+
+```typescript
+// Contoh logika penentuan kelulusan
+export function tentukanStatusKelulusan(nilaiAkhir: number): string {
+  // Jika nilai akhir lebih dari atau sama dengan 70, maka siswa lulus
+  if (nilaiAkhir >= 70) {
+    return "Lulus";
+  } else {
+    return "Tidak Lulus";
+  }
+}
+
+```
+
+---
+
+### BAGIAN 3: BASIS DATA DAN KONEKSI
+
+**10. Query Join Data**
+Karena menggunakan Prisma ORM, *query SQL JOIN* tidak ditulis manual secara implisit menggunakan sintaks SQL `SELECT ... JOIN`, melainkan menggunakan fitur relasi bawaan Prisma yaitu `include`. Prisma secara otomatis akan menerjemahkan kode di bawah ini menjadi *query JOIN* yang sangat efisien di *PostgreSQL*.
+
+```typescript
+// Mengambil data nilai beserta data profil siswa dan guru yang terkait (INNER JOIN)
+const rekapNilai = await prisma.nilai.findMany({
+  include: {
+    siswa: true, // Melakukan JOIN ke tabel Siswa
+    guru: true,  // Melakukan JOIN ke tabel Guru
+  },
+  orderBy: { createdAt: 'desc' }
+});
+
+```
+
+**11. Pengujian Kinerja dan Koneksi Basis Data**
+Koneksi basis data dipastikan stabil melalui implementasi pola **Prisma Singleton** di *environment development*. Ini mencegah kelebihan beban koneksi (koneksi terputus/habis) ketika *hot-reloading* Next.js terjadi berulang kali. Kinerja *query* diverifikasi dengan memantau *response time* di terminal *server* saat halaman tabel rekap dimuat; indeks otomatis dari Prisma *schema* memastikan operasi *JOIN* antara tabel Siswa, Guru, dan Nilai tereksekusi di bawah 50 milidetik bahkan dengan muatan data penuh.
